@@ -1,0 +1,478 @@
+<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+<style>
+div.table_Div {
+	margin-left:60px;
+}
+
+td.h_TD {
+	width:77px;
+	height:2px;
+	background-color:#000000;
+}
+	
+td.v_TD {
+	width:2px;
+	height:30px;
+	background-color:#000000;
+}
+
+td.dot_TD {
+	width:2px;
+	height:2px;
+	background-color:#000000;
+}
+
+td.blank_TD {
+	width:100px;
+	height:2px;
+}
+
+span.txt_Span {
+	width:100px;
+	text-align:center;
+}
+
+input.txt {
+	width:80px;
+}
+</style>
+
+<script>
+
+
+var MAX_HORIZONTAL_BAR = 8;			
+
+var HORIZONTAL_BAR = 0;				
+var VERTICAL_BAR = 1;				
+
+var DIRECTION_RIGHT = 0;			
+var DIRECTION_LEFT = 1;				
+
+
+
+var table_Row_Size = 0;				
+var table_Col_Size = 0;			
+
+var things_Count = 2;				
+
+var debug_Flag = true;			
+
+var odd_Ladder_Div = null;				
+var odd_Debug_Div = null;				
+
+var odd_Ladder_Table = null;		
+
+var ladder_Array = null;				
+
+
+
+
+function make_Ladder() {
+	
+	init_Data();
+	
+	
+	
+
+	var name_Array = new Array();
+	var odd_Names = document.getElementsByName("things_Name");
+	for (var i=0; i<odd_Names.length; i++) {
+		name_Array[i] = odd_Names[i].value;
+	}
+	
+
+	var result_Array = new Array();
+	var odd_Results = document.getElementsByName("result");
+	for (var i=0; i<odd_Results.length; i++) {
+		result_Array[i] = odd_Results[i].value;
+	}
+	
+
+
+	
+	odd_Ladder_Div.innerHTML = "";
+	
+	
+	for (var i=0; i<things_Count; i++) {
+		var odd_Input = document.createElement("input");
+		odd_Input.type = "button";
+		odd_Input.value = "해당값 시작";
+		odd_Input.name = "startBtn";
+		odd_Input.id = "startBtn";
+
+		var oSpan = document.createElement("span");
+		oSpan.className = "txt_Span";
+		oSpan.appendChild(odd_Input);
+		
+		odd_Ladder_Div.appendChild(oSpan);
+	}
+	
+	
+	var odd_Div = document.createElement("div");
+	odd_Div.style.height = "10px";
+	odd_Ladder_Div.appendChild(odd_Div);
+	
+	
+	for (var i=0; i<things_Count; i++) {
+		var odd_Input = document.createElement("input");
+		odd_Input.type = "text";
+		odd_Input.className = "txt";
+		odd_Input.name = "things_Name";
+		odd_Input.id = "things_Name";
+		if (i < name_Array.length) odd_Input.value = name_Array[i];
+		
+		var oSpan = document.createElement("span");
+		oSpan.className = "txt_Span";
+		oSpan.appendChild(odd_Input);
+		
+		odd_Ladder_Div.appendChild(oSpan);
+	}
+	
+	
+	var odd_Table = document.createElement("table");
+	odd_Table.border = 0;
+	odd_Table.cellPadding = 0;
+	odd_Table.cellSpacing = 0;
+	odd_Table.id = "ladder_Table";
+	
+	
+	for (var i=0; i<table_Row_Size; i++) {
+		var odd_TR = document.createElement("tr");
+		
+		
+		for (var j=0; j<table_Col_Size; j++) {
+			var odd_TD = document.createElement("td");
+			
+			
+			if (j % 2 == 0) {
+				if (i % 2 == 0) {
+					odd_TD.className = "v_TD";
+				} else {
+					odd_TD.className = "dot_TD";
+				}
+			} else {
+				if ((i % 2 == 1) && (i < table_Row_Size -1)) {
+					if (ladder_Array[i][j]) {
+						odd_TD.className = "h_TD";
+					}
+				}
+			}
+			
+			odd_TR.appendChild(odd_TD);
+		}
+		
+		odd_Table.appendChild(odd_TR);
+	}
+	
+	
+	
+	var odd_Table_Div = document.createElement("div");
+	odd_Table_Div.className = "table_Div";
+	
+	odd_Table_Div.appendChild(odd_Table);
+	odd_Ladder_Div.appendChild(odd_Table_Div);
+	
+	
+	for (var i=0; i<things_Count; i++) {
+		var odd_Input = document.createElement("input");
+		odd_Input.type = "text";
+		odd_Input.className = "txt";
+		odd_Input.name = "result";
+		odd_Input.id = "result";
+		if (i < result_Array.length) odd_Input.value = result_Array[i];
+		
+		var oSpan = document.createElement("span");
+		oSpan.className = "txt_Span";
+		oSpan.appendChild(odd_Input);
+		
+		odd_Ladder_Div.appendChild(oSpan);
+	}
+	
+	
+	odd_Ladder_Div.innerHTML = odd_Ladder_Div.innerHTML;
+	
+	odd_Ladder_Table = document.getElementById("ladder_Table");
+	
+
+	var oButtons = document.getElementsByName("startBtn");
+	for (var i=0; i<things_Count; i++) {
+		add_Event(oButtons[i], "click", startGame, false);
+	}
+}
+
+
+function init_Data() {
+	
+	table_Row_Size = MAX_HORIZONTAL_BAR * 2 + 1;
+	table_Col_Size = things_Count * 2 - 1;
+	
+	
+	ladder_Array = new Array();
+	for (var i=0; i<table_Row_Size; i++) {
+		ladder_Array[i] = new Array();
+		for (var j=0; j<table_Col_Size; j++) {
+			ladder_Array[i][j] = false;
+		}
+	}
+	
+	
+	for (var i=1; i<table_Col_Size; i+=2) {
+		var h_Bar_Count = 0;	
+		for (var j=1; j<table_Row_Size; j+=2) {
+			
+	
+			var rate = Math.floor(Math.random() * 2);
+			if (rate == 0) {
+				if (check_Adjasent_Bar(j, i)) {
+					ladder_Array[j][i] = true;
+					h_Bar_Count++;
+				}
+			}
+			
+			
+			if (h_Bar_Count >= 3) {
+				j = table_Row_Size;
+			}
+		}
+		
+		
+		if (h_Bar_Count == 0) {
+			i-=2;	
+		}
+	}
+}
+
+
+function check_Adjasent_Bar(i, j) {
+	if (j-2 >= 0 && ladder_Array[i][j-2]) return false;
+	return true;
+}
+
+
+function add_Event(elm, evType, fn, useCapture) {
+	if (elm.addEventListener) {
+		elm.addEventListener(evType, fn, useCapture);
+	}
+	else if (elm.attachEvent) {
+		elm.attachEvent('on'+evType, fn);
+	}
+}
+
+
+function add_things() {
+	things_Count++;
+	
+	make_Ladder();
+}
+
+
+function delete_things() {
+	if (things_Count == 2) return;
+	things_Count--;
+	
+	make_Ladder();
+}
+
+
+function startGame(evt) {
+	
+	var targetE;
+	if (!evt) {
+		evt = window.event;
+	}
+	if (evt.target) {
+		targetE = evt.target;
+	} else if (evt.srcElement) {
+		targetE = evt.srcElement;
+	}
+	if (targetE.nodeType==3) {
+		targetE = targetE.parentNode;
+	}
+	
+	
+	var selectedIndex = -1;
+	
+	var oButtons = document.getElementsByName("startBtn");
+	for (var i=0; i<oButtons.length; i++) {
+		if (oButtons[i] == targetE) {
+			selectedIndex = i;
+			break;
+		}
+	}
+	
+	
+	for (var i=0; i<table_Row_Size; i++) {
+		for (var j=0; j<table_Col_Size; j++) {
+			var oCell = odd_Ladder_Table.rows[i].cells[j];
+			if (oCell.className != "")
+				oCell.style.backgroundColor = "#000000";
+		}
+	}
+	
+	
+	var special_Color = get_Random_Color();
+	var odd_Names = document.getElementsByName("things_Name");
+	odd_Names[selectedIndex].style.backgroundColor = special_Color;
+	
+	
+	find_Route(VERTICAL_BAR, DIRECTION_RIGHT, 0, selectedIndex * 2);
+
+	
+	end_Col_Index = Math.floor(end_Col_Index / 2);
+	var odd_Results = document.getElementsByName("result");
+	odd_Results[end_Col_Index].style.backgroundColor = special_Color;
+}
+
+
+function get_Random_Color() {
+	var special_Color = get_Random_Number() + get_Random_Number() + get_Random_Number() +
+	get_Random_Number() + get_Random_Number() + get_Random_Number();
+	return "#"+special_Color;
+}
+
+var number_Array = new Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
+
+
+function get_Random_Number() {
+	var random_Num = Math.floor(Math.random() * 5) + 10;
+	return number_Array[random_Num];
+}
+
+var end_Col_Index = 0;
+
+function find_Route(barType, direction, startRowIndex, startColIndex) {
+	
+
+	if (barType == HORIZONTAL_BAR) {
+		
+		
+		if (startRowIndex > table_Row_Size - 1) {
+			end_Col_Index = startColIndex;
+			return;
+		}
+		
+		
+		fill_Color(startRowIndex, startColIndex);
+		
+		if (direction == DIRECTION_RIGHT) {
+			
+			if (startColIndex + 1 < table_Col_Size) {
+				
+				if (ladder_Array[startRowIndex][startColIndex+1]) {
+					fill_Color(startRowIndex, ++startColIndex);	
+					fill_Color(startRowIndex, ++startColIndex);	
+				}
+				
+				else if (ladder_Array[startRowIndex][startColIndex-1]) {
+					fill_Color(startRowIndex, --startColIndex);
+					fill_Color(startRowIndex, --startColIndex);
+					
+					direction = DIRECTION_LEFT;
+				}
+			} else {
+			
+				if (ladder_Array[startRowIndex][startColIndex-1]) {
+					fill_Color(startRowIndex, --startColIndex);	
+					fill_Color(startRowIndex, --startColIndex);
+				}
+				
+			
+				direction = DIRECTION_LEFT;
+			}
+		} else if (direction == DIRECTION_LEFT) {
+			
+			if (startColIndex - 1 >= 0) {
+				
+				if (ladder_Array[startRowIndex][startColIndex-1]) {
+					fill_Color(startRowIndex, --startColIndex);	
+					fill_Color(startRowIndex, --startColIndex);	
+				}
+				
+				else if (ladder_Array[startRowIndex][startColIndex+1]) {
+					fill_Color(startRowIndex, ++startColIndex);	
+					fill_Color(startRowIndex, ++startColIndex);	
+					
+					direction = DIRECTION_RIGHT;
+				}
+			} else {
+				
+				if (ladder_Array[startRowIndex][startColIndex+1]) {
+					fill_Color(startRowIndex, ++startColIndex);	
+					fill_Color(startRowIndex, ++startColIndex);	
+				}
+				
+				
+				direction = DIRECTION_RIGHT;
+			}
+		}
+		
+		
+		find_Route(VERTICAL_BAR, direction, startRowIndex+1, startColIndex);
+	
+
+	} else if (barType == VERTICAL_BAR) {
+		
+		fill_Color(startRowIndex, startColIndex);
+		
+		
+		find_Route(HORIZONTAL_BAR, direction, startRowIndex+1, startColIndex);
+	}
+}
+
+function fill_Color(i, j) {
+	if (i < 0 || i >= table_Row_Size) return;
+	if (j < 0 || j >= table_Col_Size) return;
+	
+	var oCell = odd_Ladder_Table.rows[i].cells[j];
+	oCell.style.backgroundColor = "#ff0000";
+}
+
+
+function print(s) {
+	if (!debug_Flag) return;
+	odd_Debug_Div.innerHTML += s;
+}
+
+
+function initPage() {
+
+	
+	odd_Ladder_Div = document.getElementById("ladderDiv");
+	odd_Debug_Div = document.getElementById("debugDiv");
+
+	make_Ladder();
+}
+
+</script>
+</head>
+
+<body onload="initPage();">
+<form name="ladderForm">
+
+
+<input type="button" value="갯수 추가" onclick="add_things();">
+<input type="button" value="갯수 제거" onclick="delete_things();">
+
+<br><br><br>
+
+
+
+<div id="ladderDiv"></div>
+
+<br><br><br>
+
+
+<div id="debugDiv"></div>
+
+</form>
+<li><a class="menuLink" href="home.html">MAIN</a></li>
+</body>
+</html>
